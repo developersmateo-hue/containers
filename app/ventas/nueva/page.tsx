@@ -43,6 +43,16 @@ export default function NuevaVentaPage() {
 
   const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
 
+  interface PersonaOption {
+    id: string;
+    nombre: string;
+    apellidos: string | null;
+  }
+
+  const [clientes, setClientes] = useState<PersonaOption[]>([]);
+  const [vendedores, setVendedores] = useState<PersonaOption[]>([]);
+
+
   const showToast = (type: "success" | "error", message: string) => {
     setToast({ type, message });
     setTimeout(() => setToast(null), 3000);
@@ -153,14 +163,58 @@ export default function NuevaVentaPage() {
     }
   };
 
-    //campo numerico
-    const renderInputNumber = (label: string, name: keyof FormState) => {
+
+  const fetchClientes = async () => {
+    const { data, error } = await supabase
+      .from("personas")
+      .select("id, nombre, apellidos")
+      .eq("tipo", "cliente")
+      .eq("activo", true)
+      .order("nombre");
+
+    if (error) throw error;
+    setClientes(data as PersonaOption[]);
+  };
+
+  const fetchVendedores = async () => {
+    const { data, error } = await supabase
+      .from("personas")
+      .select("id, nombre, apellidos")
+      .eq("tipo", "vendedor")
+      .eq("activo", true)
+      .order("nombre");
+
+    if (error) throw error;
+    setVendedores(data as PersonaOption[]);
+  };
+
+  useEffect(() => {
+    setLoading(true);
+    setErrorMsg(null);
+
+    (async () => {
+      try {
+        await Promise.all([
+          fetchClientes(),
+          fetchVendedores(),
+        ]);
+
+      } catch (err: any) {
+        setErrorMsg(err.message || "Error al cargar la venta");
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
+
+  //campo numerico
+  const renderInputNumber = (label: string, name: keyof FormState) => {
     const value = form[name] ?? "";
-  
+
     return (
       <div className="flex flex-col gap-1">
         <label className="text-sm font-medium text-gray-700">{label}</label>
-  
+
         <input
           type="text"
           name={name}
@@ -195,18 +249,16 @@ export default function NuevaVentaPage() {
             value={form[name]}
             onChange={handleChange}
             rows={3}
-            className={`w-full rounded-lg border px-3 py-2 text-sm bg-white text-gray-800 shadow-sm focus:ring-2 focus:ring-blue-500 ${
-              hasError ? "border-red-400" : "border-gray-300"
-            }`}
+            className={`w-full rounded-lg border px-3 py-2 text-sm bg-white text-gray-800 shadow-sm focus:ring-2 focus:ring-blue-500 ${hasError ? "border-red-400" : "border-gray-300"
+              }`}
           />
         ) : (
           <input
             name={name}
             value={form[name]}
             onChange={handleChange}
-            className={`w-full rounded-lg border px-3 py-2 text-sm bg-white text-gray-800 shadow-sm focus:ring-2 focus:ring-blue-500 ${
-              hasError ? "border-red-400" : "border-gray-300"
-            }`}
+            className={`w-full rounded-lg border px-3 py-2 text-sm bg-white text-gray-800 shadow-sm focus:ring-2 focus:ring-blue-500 ${hasError ? "border-red-400" : "border-gray-300"
+              }`}
           />
         )}
         {hasError && (
@@ -221,11 +273,10 @@ export default function NuevaVentaPage() {
       {/* Toast */}
       {toast && (
         <div
-          className={`fixed top-4 right-4 z-50 rounded-lg px-4 py-2 text-sm shadow-md ${
-            toast.type === "success"
-              ? "bg-green-50 text-green-700 border border-green-200"
-              : "bg-red-50 text-red-700 border border-red-200"
-          }`}
+          className={`fixed top-4 right-4 z-50 rounded-lg px-4 py-2 text-sm shadow-md ${toast.type === "success"
+            ? "bg-green-50 text-green-700 border border-green-200"
+            : "bg-red-50 text-red-700 border border-red-200"
+            }`}
         >
           {toast.message}
         </div>
@@ -261,9 +312,8 @@ export default function NuevaVentaPage() {
                 name="bl_number"
                 value={form.bl_number}
                 onChange={handleBLChange}
-                className={`w-full rounded-lg border px-3 py-2 text-sm bg-white text-gray-800 shadow-sm focus:ring-2 focus:ring-blue-500 ${
-                  errors.bl_number ? "border-red-400" : "border-gray-300"
-                }`}
+                className={`w-full rounded-lg border px-3 py-2 text-sm bg-white text-gray-800 shadow-sm focus:ring-2 focus:ring-blue-500 ${errors.bl_number ? "border-red-400" : "border-gray-300"
+                  }`}
               >
                 <option value="">Seleccione un BL</option>
                 {uniqueBLs.map((bl) => (
@@ -286,9 +336,8 @@ export default function NuevaVentaPage() {
                 value={form.container_number}
                 onChange={handleChange}
                 disabled={!form.bl_number}
-                className={`w-full rounded-lg border px-3 py-2 text-sm bg-white text-gray-800 shadow-sm focus:ring-2 focus:ring-blue-500 ${
-                  errors.container_number ? "border-red-400" : "border-gray-300"
-                } ${!form.bl_number ? "bg-gray-100 cursor-not-allowed" : ""}`}
+                className={`w-full rounded-lg border px-3 py-2 text-sm bg-white text-gray-800 shadow-sm focus:ring-2 focus:ring-blue-500 ${errors.container_number ? "border-red-400" : "border-gray-300"
+                  } ${!form.bl_number ? "bg-gray-100 cursor-not-allowed" : ""}`}
               >
                 <option value="">
                   {form.bl_number
@@ -311,9 +360,59 @@ export default function NuevaVentaPage() {
 
           {/* Datos de venta */}
           <div className="grid md:grid-cols-2 gap-4">
-            {renderInput("Cliente final", "cliente_final")}
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-medium text-gray-700">
+                Cliente final
+              </label>
+              <select
+                name="cliente_final"
+                value={form.cliente_final ?? ""}
+                onChange={handleChange}
+                className="w-full rounded-lg border px-3 py-2 text-sm bg-white text-gray-800 shadow-sm 
+    focus:ring-2 focus:ring-blue-500"
+              >
+                {/* Opción fija */}
+                <option value="Sin cliente">– Sin cliente –</option>
+
+                {/* Clientes reales */}
+                {clientes.map((c) => (
+                  <option
+                    key={c.id}
+                    value={`${c.nombre} ${c.apellidos ?? ""}`.trim()}
+                  >
+                    {c.nombre} {c.apellidos}
+                  </option>
+                ))}
+              </select>
+            </div>
+
             {renderInputNumber("Acuerdo precio (USD)", "acuerdo_precio_usd")}
-            {renderInput("Vendido por", "vendido_por")}
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-medium text-gray-700">
+                Vendido por
+              </label>
+              <select
+                name="vendido_por"
+                value={form.vendido_por ?? ""}
+                onChange={handleChange}
+                className="w-full rounded-lg border px-3 py-2 text-sm bg-white text-gray-800 shadow-sm 
+    focus:ring-2 focus:ring-blue-500"
+              >
+                {/* Opción fija */}
+                <option value="Sin vendedor">– Sin vendedor –</option>
+
+                {/* Vendedores reales */}
+                {vendedores.map((v) => (
+                  <option
+                    key={v.id}
+                    value={`${v.nombre} ${v.apellidos ?? ""}`.trim()}
+                  >
+                    {v.nombre} {v.apellidos}
+                  </option>
+                ))}
+              </select>
+            </div>
+
             {renderInputNumber("Términos de pago (días)", "terminos_pago_dias")}
           </div>
 
