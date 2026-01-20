@@ -1,6 +1,7 @@
 // src/types/containers.ts
 export interface ContainerRecord {
   id: number;
+  container_business_code?: string | null;
   raw_timestamp: string | null;
   bl_number: string;
   container_number: string;

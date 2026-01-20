@@ -5,7 +5,7 @@ import { ContainerRecord } from "@/src/types/containers";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-interface EditState extends Omit<ContainerRecord, "id" | "created_at"> {}
+interface EditState extends Omit<ContainerRecord, "id" | "created_at"> { }
 
 export default function RegistrosPage() {
   const [data, setData] = useState<ContainerRecord[]>([]);
@@ -31,7 +31,10 @@ export default function RegistrosPage() {
     try {
       const { data, error } = await supabase
         .from("containers_new")
-        .select("*")
+        .select(`
+    *,
+    container_business_code
+  `)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -49,7 +52,7 @@ export default function RegistrosPage() {
     fetchData();
   }, []);
 
-    // ============================
+  // ============================
   // SEARCH / FILTER
   // ============================
   useEffect(() => {
@@ -214,166 +217,168 @@ export default function RegistrosPage() {
       )}
 
       {/* Tabla */}
-    <div className="bg-white border border-gray-200 rounded-xl shadow-md overflow-hidden">
-  <div className="overflow-x-auto">
-    <table className="min-w-[1600px] text-sm">
-      <thead className="bg-gray-100 border-b border-gray-300">
-        <tr>
-          {[
-            "ID",
-            "BL",
-            "CONTENEDOR",
-            "BATCH",
-            "NUMBER OF PACKAGES",
-            "WEIGHT PACKAGES (KG)",
-            "TOTAL WEIGHT (KG)",
-            "QUALITY",
-            "BRAND",
-            "DEPARTURE PORT",
-            "DEPARTURE DATE",
-            "PORT OF ARRIVAL",
-            "POSSIBLE DATE ARRIVAL",
-            "IMPORTER CUBA",
-            "INCOTERMS",
-            "TOTAL PRICE USD",
-            "PRICE PER T FOB USD",
-            "PRICE PER T FWDR USD",
-            "FORWARDING COMPANY",
-            "NUMBER CONTRACT",
-            "SPECIFICATIONS",
-            "BL DRAFT",
-            "SWB",
-            "INVOICE FWDR",
-            "CONTRACT",
-            "INVOICE SUPPLIER",
-            "ESPECIFICATION SUPPLIER",
-            "CREATED",
-            "ACCIONES",
-          ].map((h) => (
-            <th key={h} className="px-3 py-2 text-left font-medium text-gray-700 whitespace-nowrap">
-              {h}
-            </th>
-          ))}
-        </tr>
-      </thead>
+      <div className="bg-white border border-gray-200 rounded-xl shadow-md overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="min-w-[1600px] text-sm">
+            <thead className="bg-gray-100 border-b border-gray-300">
+              <tr>
+                {[
+                  "BUSINESS ID",
+                  "BL",
+                  "CONTENEDOR",
+                  "BATCH",
+                  "NUMBER OF PACKAGES",
+                  "WEIGHT PACKAGES (KG)",
+                  "TOTAL WEIGHT (KG)",
+                  "QUALITY",
+                  "BRAND",
+                  "DEPARTURE PORT",
+                  "DEPARTURE DATE",
+                  "PORT OF ARRIVAL",
+                  "POSSIBLE DATE ARRIVAL",
+                  "IMPORTER CUBA",
+                  "INCOTERMS",
+                  "TOTAL PRICE USD",
+                  "PRICE PER T FOB USD",
+                  "PRICE PER T FWDR USD",
+                  "FORWARDING COMPANY",
+                  "NUMBER CONTRACT",
+                  "SPECIFICATIONS",
+                  "BL DRAFT",
+                  "SWB",
+                  "INVOICE FWDR",
+                  "CONTRACT",
+                  "INVOICE SUPPLIER",
+                  "ESPECIFICATION SUPPLIER",
+                  "CREATED",
+                  "ACCIONES",
+                ].map((h) => (
+                  <th key={h} className="px-3 py-2 text-left font-medium text-gray-700 whitespace-nowrap">
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
 
-      <tbody>
-        {loading && (
-          <tr>
-            <td colSpan={30} className="px-3 py-6 text-center text-gray-500">
-              Cargando registros...
-            </td>
-          </tr>
-        )}
+            <tbody>
+              {loading && (
+                <tr>
+                  <td colSpan={30} className="px-3 py-6 text-center text-gray-500">
+                    Cargando registros...
+                  </td>
+                </tr>
+              )}
 
-        {!loading && data.length === 0 && (
-          <tr>
-            <td colSpan={30} className="px-3 py-6 text-center text-gray-500">
-              No hay registros disponibles.
-            </td>
-          </tr>
-        )}
+              {!loading && data.length === 0 && (
+                <tr>
+                  <td colSpan={30} className="px-3 py-6 text-center text-gray-500">
+                    No hay registros disponibles.
+                  </td>
+                </tr>
+              )}
 
-        {filtered.map((item) => (
-  <tr key={item.id} className="border-t border-gray-200 hover:bg-gray-50">
-            <td className="px-3 py-2">{item.id}</td>
-            <td className="px-3 py-2">{item.bl_number}</td>
-            <td className="px-3 py-2">{item.container_number}</td>
-            <td className="px-3 py-2">{item.batch}</td>
-            <td className="px-3 py-2">{item.number_of_packages}</td>
-            <td className="px-3 py-2">{item.weight_packages_kg}</td>
-            <td className="px-3 py-2">{item.total_weight_kg}</td>
-            <td className="px-3 py-2">{item.quality}</td>
-            <td className="px-3 py-2">{item.brand}</td>
-            <td className="px-3 py-2">{item.departure_port}</td>
-            <td className="px-3 py-2">{item.departure_date}</td>
-            <td className="px-3 py-2">{item.port_of_arrival}</td>
-            <td className="px-3 py-2">{item.possible_date_of_arrival}</td>
-            <td className="px-3 py-2">{item.importer_cuba}</td>
-            <td className="px-3 py-2">{item.incoterms}</td>
-            <td className="px-3 py-2">{item.total_price_usd}</td>
-            <td className="px-3 py-2">{item.price_per_t_fob_usd}</td>
-            <td className="px-3 py-2">{item.price_per_t_forwarder_usd}</td>
-            <td className="px-3 py-2">{item.forwarding_company}</td>
-            <td className="px-3 py-2">{item.number_contract}</td>
-            <td className="px-3 py-2 max-w-[250px] truncate">{item.specifications}</td>
+              {filtered.map((item) => (
+                <tr key={item.id} className="border-t border-gray-200 hover:bg-gray-50">
+                  <td className="px-3 py-2 font-mono text-xs">
+                    {item.container_business_code || "—"}
+                  </td>
+                  <td className="px-3 py-2">{item.bl_number}</td>
+                  <td className="px-3 py-2">{item.container_number}</td>
+                  <td className="px-3 py-2">{item.batch}</td>
+                  <td className="px-3 py-2">{item.number_of_packages}</td>
+                  <td className="px-3 py-2">{item.weight_packages_kg}</td>
+                  <td className="px-3 py-2">{item.total_weight_kg}</td>
+                  <td className="px-3 py-2">{item.quality}</td>
+                  <td className="px-3 py-2">{item.brand}</td>
+                  <td className="px-3 py-2">{item.departure_port}</td>
+                  <td className="px-3 py-2">{item.departure_date}</td>
+                  <td className="px-3 py-2">{item.port_of_arrival}</td>
+                  <td className="px-3 py-2">{item.possible_date_of_arrival}</td>
+                  <td className="px-3 py-2">{item.importer_cuba}</td>
+                  <td className="px-3 py-2">{item.incoterms}</td>
+                  <td className="px-3 py-2">{item.total_price_usd}</td>
+                  <td className="px-3 py-2">{item.price_per_t_fob_usd}</td>
+                  <td className="px-3 py-2">{item.price_per_t_forwarder_usd}</td>
+                  <td className="px-3 py-2">{item.forwarding_company}</td>
+                  <td className="px-3 py-2">{item.number_contract}</td>
+                  <td className="px-3 py-2 max-w-[250px] truncate">{item.specifications}</td>
 
-            {/* LINKS A DOCUMENTOS */}
-            <td className="px-3 py-2">
-              {item.bl_draft_url ? (
-                <a href={item.bl_draft_url} target="_blank" className="text-blue-600 underline text-xs">
-                  Ver
-                </a>
-              ) : "—"}
-            </td>
+                  {/* LINKS A DOCUMENTOS */}
+                  <td className="px-3 py-2">
+                    {item.bl_draft_url ? (
+                      <a href={item.bl_draft_url} target="_blank" className="text-blue-600 underline text-xs">
+                        Ver
+                      </a>
+                    ) : "—"}
+                  </td>
 
-            <td className="px-3 py-2">
-              {item.swb_url ? (
-                <a href={item.swb_url} target="_blank" className="text-blue-600 underline text-xs">
-                  Ver
-                </a>
-              ) : "—"}
-            </td>
+                  <td className="px-3 py-2">
+                    {item.swb_url ? (
+                      <a href={item.swb_url} target="_blank" className="text-blue-600 underline text-xs">
+                        Ver
+                      </a>
+                    ) : "—"}
+                  </td>
 
-            <td className="px-3 py-2">
-              {item.invoice_forwarder_url ? (
-                <a href={item.invoice_forwarder_url} target="_blank" className="text-blue-600 underline text-xs">
-                  Ver
-                </a>
-              ) : "—"}
-            </td>
+                  <td className="px-3 py-2">
+                    {item.invoice_forwarder_url ? (
+                      <a href={item.invoice_forwarder_url} target="_blank" className="text-blue-600 underline text-xs">
+                        Ver
+                      </a>
+                    ) : "—"}
+                  </td>
 
-            <td className="px-3 py-2">
-              {item.contract_url ? (
-                <a href={item.contract_url} target="_blank" className="text-blue-600 underline text-xs">
-                  Ver
-                </a>
-              ) : "—"}
-            </td>
+                  <td className="px-3 py-2">
+                    {item.contract_url ? (
+                      <a href={item.contract_url} target="_blank" className="text-blue-600 underline text-xs">
+                        Ver
+                      </a>
+                    ) : "—"}
+                  </td>
 
-            <td className="px-3 py-2">
-              {item.invoice_supplier_url ? (
-                <a href={item.invoice_supplier_url} target="_blank" className="text-blue-600 underline text-xs">
-                  Ver
-                </a>
-              ) : "—"}
-            </td>
+                  <td className="px-3 py-2">
+                    {item.invoice_supplier_url ? (
+                      <a href={item.invoice_supplier_url} target="_blank" className="text-blue-600 underline text-xs">
+                        Ver
+                      </a>
+                    ) : "—"}
+                  </td>
 
-            <td className="px-3 py-2">
-              {item.especification_supplier ? (
-                <a href={item.especification_supplier} target="_blank" className="text-blue-600 underline text-xs">
-                  Ver
-                </a>
-              ) : "—"}
-            </td>
+                  <td className="px-3 py-2">
+                    {item.especification_supplier ? (
+                      <a href={item.especification_supplier} target="_blank" className="text-blue-600 underline text-xs">
+                        Ver
+                      </a>
+                    ) : "—"}
+                  </td>
 
-            <td className="px-3 py-2 text-xs text-gray-500">
-              {new Date(item.created_at).toLocaleString()}
-            </td>
+                  <td className="px-3 py-2 text-xs text-gray-500">
+                    {new Date(item.created_at).toLocaleString()}
+                  </td>
 
-            <td className="px-3 py-2 whitespace-nowrap">
-              <div className="flex gap-2">
-               <button
-  onClick={() => router.push(`/registros/${item.id}`)}
-  className="px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs"
->
-  Editar
-</button>
+                  <td className="px-3 py-2 whitespace-nowrap">
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => router.push(`/registros/${item.id}`)}
+                        className="px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs"
+                      >
+                        Editar
+                      </button>
 
-                <button
-                  onClick={() => confirmDelete(item)}
-                  className="px-3 py-1 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs"
-                >
-                  Eliminar
-                </button>
-              </div>
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  </div>
-</div>
+                      <button
+                        onClick={() => confirmDelete(item)}
+                        className="px-3 py-1 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs"
+                      >
+                        Eliminar
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
 
 
       {/* ===================== MODAL EDIT ===================== */}
