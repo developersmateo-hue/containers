@@ -14,9 +14,9 @@ interface ContainerOption {
 interface FormState {
   bl_number: string;
   container_number: string;
-  cliente_final: string;
+  cliente_id: string;
   acuerdo_precio_usd: string;
-  vendido_por: string;
+  vendedor_id: string;
   terminos_pago_dias: string;
   solicitud_cambio_importadora: string;
   prioridad_solicitado: string;
@@ -74,9 +74,11 @@ export default function EditVentaPage() {
     setForm({
       bl_number: venta.bl_number,
       container_number: venta.container_number,
-      cliente_final: venta.cliente_final || "",
+      cliente_id: venta.cliente ? venta.cliente.id : "",
+      vendedor_id: venta.vendedor ? venta.vendedor.id : "",
+
+
       acuerdo_precio_usd: venta.acuerdo_precio_usd || "",
-      vendido_por: venta.vendido_por || "",
       terminos_pago_dias: venta.terminos_pago_dias || "",
       solicitud_cambio_importadora:
         venta.solicitud_cambio_importadora || "",
@@ -186,18 +188,33 @@ export default function EditVentaPage() {
 
     setLoading(true);
 
+    const clienteLabel =
+      clientes.find((c) => c.id === form.cliente_id)
+        ? `${clientes.find((c) => c.id === form.cliente_id)!.nombre} ${clientes.find((c) => c.id === form.cliente_id)!.apellidos ?? ""}`.trim()
+        : null;
+
+    const vendedorLabel =
+      vendedores.find((v) => v.id === form.vendedor_id)
+        ? `${vendedores.find((v) => v.id === form.vendedor_id)!.nombre} ${vendedores.find((v) => v.id === form.vendedor_id)!.apellidos ?? ""}`.trim()
+        : null;
+
     try {
       const { error } = await supabase
         .from("ventas")
         .update({
           bl_number: form.bl_number,
           container_number: form.container_number,
-          cliente_final: form.cliente_final || null,
+
+          cliente_id: form.cliente_id || null,
+          vendedor_id: form.vendedor_id || null,
+
+          // transición
+          cliente_final: clienteLabel,
+          vendido_por: vendedorLabel,
+
           acuerdo_precio_usd: form.acuerdo_precio_usd || null,
-          vendido_por: form.vendido_por || null,
           terminos_pago_dias: form.terminos_pago_dias || null,
-          solicitud_cambio_importadora:
-            form.solicitud_cambio_importadora || null,
+          solicitud_cambio_importadora: form.solicitud_cambio_importadora || null,
           prioridad_solicitado: form.prioridad_solicitado || null,
         })
         .eq("id", id);
@@ -394,8 +411,8 @@ export default function EditVentaPage() {
                 Cliente final
               </label>
               <select
-                name="cliente_final"
-                value={form.cliente_final ?? ""}
+                name="cliente_id"
+                value={form.cliente_id ?? ""}
                 onChange={handleChange}
                 className="w-full rounded-lg border px-3 py-2 text-sm bg-white text-gray-800 shadow-sm 
     focus:ring-2 focus:ring-blue-500"
@@ -421,8 +438,8 @@ export default function EditVentaPage() {
                 Vendido por
               </label>
               <select
-                name="vendido_por"
-                value={form.vendido_por ?? ""}
+                name="vendedor_id"
+                value={form.vendedor_id ?? ""}
                 onChange={handleChange}
                 className="w-full rounded-lg border px-3 py-2 text-sm bg-white text-gray-800 shadow-sm 
     focus:ring-2 focus:ring-blue-500"

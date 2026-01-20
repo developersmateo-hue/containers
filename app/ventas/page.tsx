@@ -23,24 +23,82 @@ export default function VentasPage() {
     setToast({ type, message });
     setTimeout(() => setToast(null), 3000);
   };
-
   const fetchVentas = async () => {
     setLoading(true);
     setErrorMsg(null);
+
     try {
       const { data, error } = await supabase
         .from("ventas")
-        .select("*")
+        .select(`
+        id,
+        bl_number,
+        container_number,
+        acuerdo_precio_usd,
+        terminos_pago_dias,
+        prioridad_solicitado,
+        solicitud_cambio_importadora,
+        created_at,
+
+        cliente:cliente_id (
+          id,
+          nombre,
+          apellidos
+        ),
+
+        vendedor:vendedor_id (
+          id,
+          nombre,
+          apellidos
+        )
+      `)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      setVentas(data as Venta[]);
+
+      // 🔥 LOG MAESTRO
+      console.log("VENTAS RAW FROM SUPABASE 👇");
+      console.log(JSON.stringify(data, null, 2));
+
+      const normalized: Venta[] = (data ?? []).map((v: any) => ({
+        id: v.id,
+        bl_number: v.bl_number,
+        container_number: v.container_number,
+
+        acuerdo_precio_usd: v.acuerdo_precio_usd,
+        terminos_pago_dias: v.terminos_pago_dias,
+        prioridad_solicitado: v.prioridad_solicitado,
+        solicitud_cambio_importadora: v.solicitud_cambio_importadora,
+        created_at: v.created_at,
+
+        cliente: v.cliente
+          ? {
+            id: v.cliente.id,
+            nombre: v.cliente.nombre,
+            apellidos: v.cliente.apellidos,
+          }
+          : null,
+
+        vendedor: v.vendedor
+          ? {
+            id: v.vendedor.id,
+            nombre: v.vendedor.nombre,
+            apellidos: v.vendedor.apellidos,
+          }
+          : null,
+      }));
+
+      setVentas(normalized);
+
     } catch (err: any) {
       setErrorMsg(err.message || "Error al cargar ventas");
     } finally {
       setLoading(false);
     }
   };
+
+
+
 
   useEffect(() => {
     fetchVentas();
@@ -53,8 +111,14 @@ export default function VentasPage() {
       return (
         v.bl_number.toLowerCase().includes(term) ||
         v.container_number.toLowerCase().includes(term) ||
-        (v.cliente_final || "").toLowerCase().includes(term) ||
-        (v.vendido_por || "").toLowerCase().includes(term)
+        (v.cliente
+          ? `${v.cliente.nombre} ${v.cliente.apellidos ?? ""}`.toLowerCase()
+          : ""
+        ).includes(term) ||
+        (v.vendedor
+          ? `${v.vendedor.nombre} ${v.vendedor.apellidos ?? ""}`.toLowerCase()
+          : ""
+        ).includes(term)
       );
     });
   }, [ventas, search]);
@@ -66,6 +130,7 @@ export default function VentasPage() {
 
   const performDelete = async () => {
     if (!deleteItem) return;
+
     setLoading(true);
     setErrorMsg(null);
 
@@ -89,16 +154,16 @@ export default function VentasPage() {
     }
   };
 
+
   return (
     <div className="space-y-6">
       {/* Toast */}
       {toast && (
         <div
-          className={`fixed top-4 right-4 z-50 rounded-lg px-4 py-2 text-sm shadow-md ${
-            toast.type === "success"
-              ? "bg-green-50 text-green-700 border border-green-200"
-              : "bg-red-50 text-red-700 border border-red-200"
-          }`}
+          className={`fixed top-4 right-4 z-50 rounded-lg px-4 py-2 text-sm shadow-md ${toast.type === "success"
+            ? "bg-green-50 text-green-700 border border-green-200"
+            : "bg-red-50 text-red-700 border border-red-200"
+            }`}
         >
           {toast.message}
         </div>
@@ -192,9 +257,17 @@ export default function VentasPage() {
                   <td className="px-3 py-2">{venta.id}</td>
                   <td className="px-3 py-2">{venta.bl_number}</td>
                   <td className="px-3 py-2">{venta.container_number}</td>
-                  <td className="px-3 py-2">{venta.cliente_final}</td>
+                  <td className="px-3 py-2">
+                    {venta.cliente
+                      ? `${venta.cliente.nombre} ${venta.cliente.apellidos ?? ""}`.trim()
+                      : "—"}
+                  </td>
                   <td className="px-3 py-2">{venta.acuerdo_precio_usd}</td>
-                  <td className="px-3 py-2">{venta.vendido_por}</td>
+                  <td className="px-3 py-2">
+                    {venta.vendedor
+                      ? `${venta.vendedor.nombre} ${venta.vendedor.apellidos ?? ""}`.trim()
+                      : "—"}
+                  </td>
                   <td className="px-3 py-2">{venta.terminos_pago_dias}</td>
                   <td className="px-3 py-2">{venta.prioridad_solicitado}</td>
                   <td className="px-3 py-2 text-xs text-gray-500">

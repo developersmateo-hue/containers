@@ -13,9 +13,9 @@ interface ContainerOption {
 interface FormState {
   bl_number: string;
   container_number: string;
-  cliente_final: string;
+  cliente_id: string;
   acuerdo_precio_usd: string;
-  vendido_por: string;
+  vendedor_id: string;
   terminos_pago_dias: string;
   solicitud_cambio_importadora: string;
   prioridad_solicitado: string;
@@ -24,9 +24,9 @@ interface FormState {
 const initialForm: FormState = {
   bl_number: "",
   container_number: "",
-  cliente_final: "",
+  cliente_id: "",
   acuerdo_precio_usd: "",
-  vendido_por: "",
+  vendedor_id: "",
   terminos_pago_dias: "",
   solicitud_cambio_importadora: "",
   prioridad_solicitado: "",
@@ -132,16 +132,32 @@ export default function NuevaVentaPage() {
 
     setLoading(true);
 
+    const clienteLabel =
+      clientes.find((c) => c.id === form.cliente_id)
+        ? `${clientes.find((c) => c.id === form.cliente_id)!.nombre} ${clientes.find((c) => c.id === form.cliente_id)!.apellidos ?? ""}`.trim()
+        : null;
+
+    const vendedorLabel =
+      vendedores.find((v) => v.id === form.vendedor_id)
+        ? `${vendedores.find((v) => v.id === form.vendedor_id)!.nombre} ${vendedores.find((v) => v.id === form.vendedor_id)!.apellidos ?? ""}`.trim()
+        : null;
+
     try {
       const { error } = await supabase.from("ventas").insert({
         bl_number: form.bl_number,
         container_number: form.container_number,
-        cliente_final: form.cliente_final || null,
+
+        // ✅ NUEVO: IDs reales
+        cliente_id: form.cliente_id || null,
+        vendedor_id: form.vendedor_id || null,
+
+        // ✅ TRANSICIÓN: snapshot texto (opcional pero recomendado para no romper pantallas viejas)
+        cliente_final: clienteLabel,
+        vendido_por: vendedorLabel,
+
         acuerdo_precio_usd: form.acuerdo_precio_usd || null,
-        vendido_por: form.vendido_por || null,
         terminos_pago_dias: form.terminos_pago_dias || null,
-        solicitud_cambio_importadora:
-          form.solicitud_cambio_importadora || null,
+        solicitud_cambio_importadora: form.solicitud_cambio_importadora || null,
         prioridad_solicitado: form.prioridad_solicitado || null,
       });
 
@@ -361,57 +377,49 @@ export default function NuevaVentaPage() {
           {/* Datos de venta */}
           <div className="grid md:grid-cols-2 gap-4">
             <div className="flex flex-col gap-1">
-              <label className="text-sm font-medium text-gray-700">
-                Cliente final
-              </label>
+              <label className="text-sm font-medium text-gray-700">Cliente final</label>
               <select
-                name="cliente_final"
-                value={form.cliente_final ?? ""}
+                name="cliente_id"
+                value={form.cliente_id}
                 onChange={handleChange}
-                className="w-full rounded-lg border px-3 py-2 text-sm bg-white text-gray-800 shadow-sm 
-    focus:ring-2 focus:ring-blue-500"
+                className="w-full rounded-lg border px-3 py-2 text-sm bg-white text-gray-800 shadow-sm focus:ring-2 focus:ring-blue-500"
               >
-                {/* Opción fija */}
-                <option value="Sin cliente">– Sin cliente –</option>
-
-                {/* Clientes reales */}
-                {clientes.map((c) => (
-                  <option
-                    key={c.id}
-                    value={`${c.nombre} ${c.apellidos ?? ""}`.trim()}
-                  >
-                    {c.nombre} {c.apellidos}
-                  </option>
-                ))}
+                <option value="">– Sin cliente –</option>
+                {clientes.map((c) => {
+                  const label = `${c.nombre} ${c.apellidos ?? ""}`.trim();
+                  return (
+                    <option key={c.id} value={c.id}>
+                      {label}
+                    </option>
+                  );
+                })}
               </select>
             </div>
+
 
             {renderInputNumber("Acuerdo precio (USD)", "acuerdo_precio_usd")}
-            <div className="flex flex-col gap-1">
-              <label className="text-sm font-medium text-gray-700">
-                Vendido por
-              </label>
-              <select
-                name="vendido_por"
-                value={form.vendido_por ?? ""}
-                onChange={handleChange}
-                className="w-full rounded-lg border px-3 py-2 text-sm bg-white text-gray-800 shadow-sm 
-    focus:ring-2 focus:ring-blue-500"
-              >
-                {/* Opción fija */}
-                <option value="Sin vendedor">– Sin vendedor –</option>
 
-                {/* Vendedores reales */}
-                {vendedores.map((v) => (
-                  <option
-                    key={v.id}
-                    value={`${v.nombre} ${v.apellidos ?? ""}`.trim()}
-                  >
-                    {v.nombre} {v.apellidos}
-                  </option>
-                ))}
+
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-medium text-gray-700">Vendido por</label>
+              <select
+                name="vendedor_id"
+                value={form.vendedor_id}
+                onChange={handleChange}
+                className="w-full rounded-lg border px-3 py-2 text-sm bg-white text-gray-800 shadow-sm focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">– Sin vendedor –</option>
+                {vendedores.map((v) => {
+                  const label = `${v.nombre} ${v.apellidos ?? ""}`.trim();
+                  return (
+                    <option key={v.id} value={v.id}>
+                      {label}
+                    </option>
+                  );
+                })}
               </select>
             </div>
+
 
             {renderInputNumber("Términos de pago (días)", "terminos_pago_dias")}
           </div>
