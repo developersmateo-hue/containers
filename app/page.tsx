@@ -4,6 +4,7 @@
 import { supabase } from "@/src/lib/supabaseClient";
 import { uploadDocument } from "@/src/lib/uploadDocument";
 import { onlyNumberInput } from "@/src/utils/onlyNumberInput";
+import { toUpper } from "@/src/utils/toUpper";
 // import { uploadDocument } from "@/src/lib/uploadFile";
 import { useState } from "react";
 
@@ -120,12 +121,15 @@ export default function HomePage() {
   }));
 };
 
-  const handleChange = (e: any) => {
-    setForm((prev: any) => ({
-      ...prev,
-      [e.target.name]: e.target.value,
-    }));
-  };
+ const handleChange = (e: any) => {
+  const { name, value } = e.target;
+
+  setForm((prev: any) => ({
+    ...prev,
+    [name]: typeof value === "string" ? toUpper(value) : value,
+  }));
+};
+
 // Nuevo estado UI
 const [productSelect, setProductSelect] = useState("");
 const [productOther, setProductOther] = useState("");

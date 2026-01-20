@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { supabase } from "@/src/lib/supabaseClient";
 import { uploadDocument } from "@/src/lib/uploadDocument";
+import { toUpper } from "@/src/utils/toUpper";
 
 export default function EditContainerPage() {
   const router = useRouter();
@@ -46,7 +47,7 @@ export default function EditContainerPage() {
   const handleChange = (name: string, value: any) => {
     setForm((prev: any) => ({
       ...prev,
-      [name]: value,
+      [name]: typeof value === "string" ? toUpper(value) : value,
     }));
   };
 
@@ -189,52 +190,78 @@ export default function EditContainerPage() {
   // ================================
   // SUBMIT UPDATE
   // ================================
-  const handleSubmit = async (e: any) => {
-    e.preventDefault();
-    setLoading(true);
-    setErrorMsg(null);
-    setSuccessMsg(null);
+const handleSubmit = async (e: any) => {
+  e.preventDefault();
+  setLoading(true);
+  setErrorMsg(null);
+  setSuccessMsg(null);
 
-    try {
-      let updatedUrls: any = {};
+  try {
+    let updatedUrls: any = {};
 
-      // UPLOADS (igual que antes)
-      for (const key of Object.keys(files)) {
-        if (files[key]) {
-          const folder = key.replace("_file", "").toUpperCase();
-          updatedUrls[`${folder.toLowerCase()}_url`] = await uploadDocument(
-            files[key],
-            folder,
-            form.bl_number,
-            form.container_number,
-            form.batch,
-            form[`${folder.toLowerCase()}_url`]
-          );
-        }
+    // SUBIDA DE ARCHIVOS
+    for (const key of Object.keys(files)) {
+      if (files[key]) {
+        const folder = key.replace("_file", "").toUpperCase();
+        updatedUrls[`${folder.toLowerCase()}_url`] = await uploadDocument(
+          files[key],
+          folder,
+          form.bl_number,
+          form.container_number,
+          form.batch,
+          form[`${folder.toLowerCase()}_url`]
+        );
       }
-
-      // PRODUCT
-      let finalProduct = productSelect === "OTRO" ? productOther : productSelect;
-
-      const { error } = await supabase
-        .from("containers_new")
-        .update({
-          ...form,
-          ...updatedUrls,
-          product: finalProduct,
-        })
-        .eq("id", id);
-
-      if (error) throw error;
-
-      setSuccessMsg("Registro actualizado correctamente.");
-      setTimeout(() => router.push("/registros"), 1000);
-    } catch (err: any) {
-      setErrorMsg(err.message);
-    } finally {
-      setLoading(false);
     }
-  };
+
+    // PRODUCTO FINAL
+    const finalProduct =
+      productSelect === "OTRO" ? productOther : productSelect;
+
+    // ✅ PAYLOAD LIMPIO (SOLO CAMPOS EDITABLES)
+    const payload = {
+      bl_number: form.bl_number,
+      container_number: form.container_number,
+      batch: form.batch,
+      number_of_packages: form.number_of_packages,
+      weight_packages_kg: form.weight_packages_kg,
+      total_weight_kg: form.total_weight_kg,
+      quality: form.quality,
+      brand: form.brand,
+      departure_port: form.departure_port,
+      departure_date: form.departure_date,
+      port_of_arrival: form.port_of_arrival,
+      possible_date_of_arrival: form.possible_date_of_arrival,
+      importer_cuba: form.importer_cuba,
+      incoterms: form.incoterms,
+      total_price_usd: form.total_price_usd,
+      price_per_t_fob_usd: form.price_per_t_fob_usd,
+      price_per_t_forwarder_usd: form.price_per_t_forwarder_usd,
+      forwarding_company: form.forwarding_company,
+      number_contract: form.number_contract,
+      specifications: form.specifications,
+      product: finalProduct,
+      ...updatedUrls,
+    };
+
+    console.log("UPDATE PAYLOAD SEGURO 👇", payload);
+
+    const { error } = await supabase
+      .from("containers_new")
+      .update(payload)
+      .eq("id", id);
+
+    if (error) throw error;
+
+    setSuccessMsg("Registro actualizado correctamente.");
+    setTimeout(() => router.push("/registros"), 1000);
+  } catch (err: any) {
+    setErrorMsg(err.message);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
 
   // ================================
