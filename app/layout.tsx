@@ -22,11 +22,12 @@ export default function RootLayout({
             </h1>
             <nav className="flex gap-4 text-sm font-medium">
               <Link
-                href="/personas"
+                href="/personas?tipo=cliente"
                 className="px-3 py-1.5 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition"
               >
-                Cliente - Vendedor
+                Clientes / Vendedores
               </Link>
+
               <Link
                 href="/registros"
                 className="px-3 py-1.5 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition"
